@@ -1,11 +1,6 @@
-// fonts-face template
-
-// @font-face {
-//   font-family: "FONT_NAME";
-//   src: url("FONT_SRC.otf") format("opentype"),
-//        url("FONT_SRC.ttf") format("truetype"),
-//        url("FONT_SRC.woff") format("woff"), 
-//        url("FONT_SRC.woff2") format("woff2"); 
-//   font-weight: normal;
-//   font-style: normal;
-// }
+@font-face {
+  font-family: "Roboto";
+  src: url("../fonts/Roboto-Regular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
