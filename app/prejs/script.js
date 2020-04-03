@@ -1,4 +1,4 @@
-const keybordKeys = [
+const keyboardKeys = [
   [
     ['ё', 'Ё', '`', '~'], ['1', '!', '1', '!'], ['2', '\x22', '2', '@'],
     ['3', '№', '3', '#'], ['4', ';', '4', '$'], ['5', '%', '5', '%'],
@@ -32,8 +32,37 @@ const keybordKeys = [
     ['Ctrl'], ['Win'], ['Alt'], ['Space'],
     ['Alt'], ['◄', '◄', '◄', '◄'], ['▼', '▼', '▼', '▼'],
     ['►', '►', '►', '►'], ['Ctrl'],
-  ]
+  ],
 ];
+
+const specialCase = {
+  б: 'Comma',
+  ё: 'Backquote',
+  ю: 'Period',
+  '.': 'Slash',
+  ж: 'Semicolon',
+  э: 'Quote',
+  х: 'BracketLeft',
+  ъ: 'BracketRight',
+  '-': 'Minus',
+  '=': 'Equal',
+  0: 'Digit0',
+  1: 'Digit1',
+  2: 'Digit2',
+  3: 'Digit3',
+  4: 'Digit4',
+  5: 'Digit5',
+  6: 'Digit6',
+  7: 'Digit7',
+  8: 'Digit8',
+  9: 'Digit9',
+  '◄': 'ArrowLeft',
+  '►': 'ArrowRight',
+  '▼': 'ArrowDown',
+  '▲': 'ArrowUp',
+  '\x5c': 'Backslash',
+  Del: 'Delete',
+};
 
 
 function createElement(tagName, content, ...classes) {
@@ -49,22 +78,22 @@ function createMetaKey(content, ...classes) {
   const elemClass = `${mainClass}__label`;
   const childElem = createElement('DIV', content, elemClass);
 
-  return createElement('DIV', childElem, classes, mainClass);
+  return createElement('DIV', childElem, mainClass, classes);
 }
 
 
 function createKeyChild(mainClass, lowSymbol, upperSymbol) {
   const lowercaseClass = `${mainClass}-lowercase`;
   const uppercaseClass = `${mainClass}-uppercase`;
-  const elementWithLow = createElement('DIV', lowSymbol, lowercaseClass)
-  const elementWithUpp = createElement('DIV', upperSymbol, uppercaseClass)
+  const elementWithLow = createElement('DIV', lowSymbol, lowercaseClass);
+  const elementWithUpp = createElement('DIV', upperSymbol, uppercaseClass);
   const fragment = document.createDocumentFragment();
   fragment.append(elementWithLow, elementWithUpp);
 
   return createElement('DIV', fragment, mainClass);
 }
 
-function createKey(symbols) {
+function createKey(symbols, cls) {
   const [rusLow, rusUpp, enLow, enUpp] = symbols;
   const mainClass = 'key';
   const ruLangClass = `${mainClass}__ru`;
@@ -74,14 +103,92 @@ function createKey(symbols) {
   const fragment = document.createDocumentFragment();
   fragment.append(ruSymbols, enSymbols);
 
-  return createElement('DIV', fragment, mainClass);
+  return createElement('DIV', fragment, mainClass, cls);
 }
+
 
 class Keyboard {
-  constructor() {
+  constructor(data) {
+    this.data = data;
+    this.className = 'keyboard';
+    this.btnClass = 'key';
     this.keyboard = null;
-    this.keyboardRows = document.createDocumentFragment();
+    this.textArea = null;
+    this.keyboardRows = null;
 
+    this.keyboardSurfaceClass = `${this.className}__surface`;
+    this.textAreaClass = `${this.className}__input`;
+    this.wrapperClass = `${this.className}__wrapper`;
   }
 
+
+  createRows() {
+    this.keyboardRows = document.createDocumentFragment();
+    const rowsModificators = ['--first', '--second', '--third', '--fourth', '--fifth'];
+    const rowClass = `${this.className}-row`;
+
+    for (let i = 0; i < rowsModificators.length; i += 1) {
+      const rowClassWithMod = `${rowClass}${rowsModificators[i]}`;
+      this.keyboardRows.append(createElement('DIV', '', rowClass, rowClassWithMod));
+    }
+  }
+
+  getModificator(arrOfSymbols, arr, pos) {
+    const [firstSymbol, , , lastSymbol] = arrOfSymbols;
+    const specialModificator = specialCase[firstSymbol];
+
+    if (specialModificator) {
+      return `${this.btnClass}--${specialModificator}`;
+    }
+
+    if (arrOfSymbols.length === 1) {
+      if (firstSymbol === 'Shift' || firstSymbol === 'Alt' || firstSymbol === 'Alt') {
+        const mid = Math.floor(arr.length / 2);
+        const prefix = (pos < mid) ? 'Left' : 'Right';
+        return `${this.btnClass}--${prefix}${firstSymbol}`;
+      }
+      return `${this.btnClass}--${firstSymbol}`;
+    }
+    return `${this.btnClass}--${lastSymbol}`;
+  }
+
+  createAndfillRows() {
+    this.createRows();
+
+    for (let i = 0; i < this.data.length; i += 1) {
+      const rowData = this.data[i];
+      const row = this.keyboardRows.children[i];
+      for (let j = 0; j < rowData.length; j += 1) {
+        const symbols = rowData[j];
+        const classWithMod = this.getModificator(symbols, rowData, j);
+        if (symbols.length === 1) {
+          row.append(createMetaKey(symbols[0], classWithMod));
+        } else {
+          row.append(createKey(symbols, classWithMod));
+        }
+      }
+    }
+  }
+
+  createKeyboard() {
+    this.createAndfillRows();
+    const keyboardSurface = createElement('DIV', this.keyboardRows, this.keyboardSurfaceClass);
+    const textArea = createElement('TEXTAREA', '', this.textAreaClass);
+    const wrapper = createElement('DIV', '', this.wrapperClass);
+    keyboardSurface.append(this.keyboardRows);
+    wrapper.append(textArea, keyboardSurface);
+
+    return createElement('DIV', wrapper, this.className);
+  }
+
+  init() {
+    const keyboard = this.createKeyboard();
+    document.body.prepend(keyboard);
+  }
 }
+
+
+window.addEventListener('load', () => {
+  const keyboard = new Keyboard(keyboardKeys);
+  keyboard.init();
+});
