@@ -1,0 +1,13 @@
+.meta-key{
+  @include key($metaKeyBgColor,$metaKeyFontSize, $bordersColor, $keysHoverColor);
+
+    &__label{
+      white-space: nowrap;
+      display: block;
+      position: absolute;
+      content: '';
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+}

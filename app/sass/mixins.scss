@@ -5,3 +5,24 @@
   height: 1px;
   margin: -1px;
 }
+
+@mixin key($bg, $fs, $bordersColor, $hoverColor){
+  background-color: $bg;
+  position: relative;
+  transition: all 0.3s;
+  font-size: $fs;
+  border: 3px solid $bordersColor;
+  border-radius: 3px;
+  box-shadow: 3px 3px $bordersColor;
+
+  &:hover{
+    cursor: pointer;
+    background-color: $hoverColor;
+  }
+
+  &--active{
+    background-color: $hoverColor;
+    transform: translate(3px, 3px);
+    box-shadow: none;
+  }
+}

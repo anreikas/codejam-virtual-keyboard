@@ -1,0 +1,60 @@
+.app{
+  background-color: $appBgColor;
+  width: 100vw;
+  min-height: 100vh;
+  display: flex;
+}
+
+.app__wrapper {
+  flex: 0 1 704px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.app__input {
+  width: 100%;
+  resize: none;
+  min-height: 30%;
+  box-sizing: border-box;
+  font-size: 20px;
+  border: none;
+  margin-bottom: 20px;
+
+    &:focus{
+      outline: none;
+    }
+}
+
+.app__keyboard {
+  display: grid;
+  grid-template-rows: repeat(5, auto);
+  grid-row-gap: 10px;
+}
+
+.app__keyboard-row {
+  display: grid;
+  grid-column-gap: 6px;
+  grid-template-rows: 40px;;
+
+    &--first{
+      grid-template-columns: repeat(13, 40px) auto;
+    }
+
+    &--second{
+      grid-template-columns: auto repeat(13, 5.7%) auto;
+    }
+
+    &--third{
+      grid-template-columns: 12% repeat(11, 5.7%) auto;
+    }
+
+    &--fourth{
+      grid-template-columns: 14.8%  repeat(11, 5.7%)  auto;
+    }
+
+    &--fifth{
+      grid-template-columns: repeat(3, 5.7%) auto repeat(5, 5.7%);
+    }
+}

@@ -1,0 +1,37 @@
+.key{
+   @include key($keyBgColor,$keyFontSize, $bordersColor, $keysHoverColor);
+}
+
+.key__ru,
+.key__en{
+  position: absolute;
+  content: " " ;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.key__ru-lowercase,
+.key__ru-uppercase,
+.key__en-lowercase,
+.key__en-uppercase{
+  display: none;
+}
+
+.key--en.key--lowercase .key__en-lowercase{
+  display: block;
+}
+
+.key--en.key--uppercase .key__en-uppercase{
+  display: block;
+}
+
+.key--ru.key--lowercase .key__ru-lowercase{
+  display: block;
+}
+
+.key--ru.key--uppercase .key__ru-uppercase{
+  display: block;
+}
+
+
