@@ -19,6 +19,8 @@ body {
 
   width: 100vw;
   min-height: 100vh;
+
+  background-color: cyan;
 }
 
 .keyboard__wrapper {
@@ -81,6 +83,22 @@ body {
   grid-template-columns: repeat(3, 5.7%) auto repeat(5, 5.7%);
 }
 
+.keyboard--en.keyboard--lowercase .key__en-lowercase {
+  display: block;
+}
+
+.keyboard--en.keyboard--uppercase .key__en-uppercase {
+  display: block;
+}
+
+.keyboard--ru.keyboard--lowercase .key__ru-lowercase {
+  display: block;
+}
+
+.keyboard--ru.keyboard--uppercase .key__ru-uppercase {
+  display: block;
+}
+
 .key {
   position: relative;
 
@@ -122,22 +140,6 @@ body {
 .key__en-lowercase,
 .key__en-uppercase {
   display: none;
-}
-
-.key--en.key--lowercase .key__en-lowercase {
-  display: block;
-}
-
-.key--en.key--uppercase .key__en-uppercase {
-  display: block;
-}
-
-.key--ru.key--lowercase .key__ru-lowercase {
-  display: block;
-}
-
-.key--ru.key--uppercase .key__ru-uppercase {
-  display: block;
 }
 
 .meta-key {

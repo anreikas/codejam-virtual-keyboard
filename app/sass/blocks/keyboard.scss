@@ -1,5 +1,5 @@
 .keyboard{
-  // background-color: $keyboardBgColor;
+  background-color: $appBgColor;
   width: 100vw;
   min-height: 100vh;
   display: flex;
@@ -58,3 +58,21 @@
       grid-template-columns: repeat(3, 5.7%) auto repeat(5, 5.7%);
     }
 }
+
+
+.keyboard--en.keyboard--lowercase .key__en-lowercase{
+  display: block;
+}
+
+.keyboard--en.keyboard--uppercase .key__en-uppercase{
+  display: block;
+}
+
+.keyboard--ru.keyboard--lowercase .key__ru-lowercase{
+  display: block;
+}
+
+.keyboard--ru.keyboard--uppercase .key__ru-uppercase{
+  display: block;
+}
+
