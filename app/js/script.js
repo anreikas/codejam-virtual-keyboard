@@ -98,6 +98,41 @@ function getCurrentKey(keyCode) {
   return document.body.querySelector('.' + code);
 }
 
+function getDataFromStorage(item, defValue) {
+  if (localStorage.getItem(item)) {
+    return localStorage.getItem(item);
+  }
+
+  localStorage.setItem(item, defValue);
+  return defValue;
+}
+
+function changDataInStorage(item, defValue, newVal) {
+  var oldVal = localStorage.getItem(item);
+  var currentVal = oldVal === defValue ? newVal : defValue;
+  localStorage.setItem(item, currentVal);
+
+  return {
+    oldVal: oldVal,
+    currentVal: currentVal
+  };
+}
+
+function stateChanger(cb, className, where) {
+  var _cb$call = cb.call(this),
+      oldVal = _cb$call.oldVal,
+      currentVal = _cb$call.currentVal;
+
+  var currentLangClass = className + '--' + currentVal;
+  var oldLangClass = className + '--' + oldVal;
+
+  for (var i = 0; i < where.length; i += 1) {
+    var element = where[i];
+    element.classList.remove(oldLangClass);
+    element.classList.add(currentLangClass);
+  }
+}
+
 var Keyboard = function () {
   function Keyboard(data) {
     _classCallCheck(this, Keyboard);
@@ -126,86 +161,42 @@ var Keyboard = function () {
         if (e.inputType !== 'deleteContentBackward') {
           this.value = this.value.slice(0, this.value.length - 1);
         }
-        e.preventDefault();
       });
+
+      // this.textArea.addEventListener('keydown', function (e) {
+      //   const { target } = e;
+      //   console.log(target.selectionStart)
+      // })
     }
   }, {
     key: 'getLang',
     value: function getLang() {
-      if (localStorage.getItem('lang')) {
-        return localStorage.getItem('lang');
-      }
-
-      localStorage.setItem('lang', this.defActiveLang);
-      return this.defActiveLang;
+      return getDataFromStorage.call(this, 'lang', this.defActiveLang);
     }
   }, {
     key: 'changeLang',
     value: function changeLang() {
-      var oldLang = localStorage.getItem('lang');
-      var currentLang = oldLang === this.defActiveLang ? 'en' : this.defActiveLang;
-      localStorage.setItem('lang', currentLang);
-
-      return {
-        oldLang: oldLang,
-        currentLang: currentLang
-      };
+      return changDataInStorage.call(this, 'lang', this.defActiveLang, 'en');
     }
   }, {
     key: 'changeKeyboardLang',
     value: function changeKeyboardLang() {
-      var _changeLang = this.changeLang(),
-          oldLang = _changeLang.oldLang,
-          currentLang = _changeLang.currentLang;
-
-      var currentLangClass = this.className + '--' + currentLang;
-      var oldLangClass = this.className + '--' + oldLang;
-
-      for (var i = 0; i < this.keyboardRows.length; i += 1) {
-        var element = this.keyboardRows[i];
-        element.classList.remove(oldLangClass);
-        element.classList.add(currentLangClass);
-      }
+      stateChanger.call(this, this.changeLang, this.className, this.keyboardRows);
     }
   }, {
     key: 'getCase',
     value: function getCase() {
-      if (localStorage.getItem('case')) {
-        return localStorage.getItem('case');
-      }
-
-      localStorage.setItem('case', this.defActiveCase);
-      return this.defActiveCase;
+      return getDataFromStorage('case', this.defActiveCase);
     }
   }, {
     key: 'changeCase',
     value: function changeCase() {
-      var oldCase = localStorage.getItem('case');
-      var currentCase = oldCase === this.defActiveCase ? 'uppercase' : this.defActiveCase;
-      localStorage.setItem('case', currentCase);
-
-      return {
-        oldCase: oldCase,
-        currentCase: currentCase
-      };
+      return changDataInStorage('case', this.defActiveCase, 'uppercase');
     }
   }, {
     key: 'changeKeyboardCase',
     value: function changeKeyboardCase() {
-      var _changeCase = this.changeCase(),
-          oldCase = _changeCase.oldCase,
-          currentCase = _changeCase.currentCase;
-      // debugger;
-
-
-      var currentCaseClass = this.className + '--' + currentCase;
-      var oldCaseClass = this.className + '--' + oldCase;
-
-      for (var i = 0; i < this.keyboardRows.length; i += 1) {
-        var element = this.keyboardRows[i];
-        element.classList.remove(oldCaseClass);
-        element.classList.add(currentCaseClass);
-      }
+      stateChanger.call(this, this.changeCase, this.className, this.keyboardRows);
     }
   }, {
     key: 'createRows',
@@ -364,7 +355,6 @@ var Keyboard = function () {
     value: function init() {
       this.createKeyboard();
       document.body.prepend(this.keyboard);
-
       this.preventInput();
       document.body.addEventListener('keydown', this.onKeyDown.bind(this));
       document.body.addEventListener('keyup', this.onKeyUp.bind(this));

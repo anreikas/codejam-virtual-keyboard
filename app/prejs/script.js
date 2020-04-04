@@ -109,6 +109,38 @@ function getCurrentKey(keyCode) {
   return document.body.querySelector(`.${code}`);
 }
 
+function getDataFromStorage(item, defValue) {
+  if (localStorage.getItem(item)) {
+    return localStorage.getItem(item);
+  }
+
+  localStorage.setItem(item, defValue);
+  return defValue;
+}
+
+function changDataInStorage(item, defValue, newVal) {
+  const oldVal = localStorage.getItem(item);
+  const currentVal = (oldVal === defValue) ? newVal : defValue;
+  localStorage.setItem(item, currentVal);
+
+  return {
+    oldVal,
+    currentVal,
+  };
+}
+
+function stateChanger(cb, className, where) {
+  const { oldVal, currentVal } = cb.call(this);
+  const currentLangClass = `${className}--${currentVal}`;
+  const oldLangClass = `${className}--${oldVal}`;
+
+  for (let i = 0; i < where.length; i += 1) {
+    const element = where[i];
+    element.classList.remove(oldLangClass);
+    element.classList.add(currentLangClass);
+  }
+}
+
 class Keyboard {
   constructor(data) {
     this.data = data;
@@ -133,73 +165,36 @@ class Keyboard {
       if (e.inputType !== 'deleteContentBackward') {
         this.value = this.value.slice(0, this.value.length - 1);
       }
-      e.preventDefault();
-    });
+    })
+
+    // this.textArea.addEventListener('keydown', function (e) {
+    //   const { target } = e;
+    //   console.log(target.selectionStart)
+    // })
   }
 
   getLang() {
-    if (localStorage.getItem('lang')) {
-      return localStorage.getItem('lang');
-    }
-
-    localStorage.setItem('lang', this.defActiveLang);
-    return this.defActiveLang;
+    return getDataFromStorage.call(this, 'lang', this.defActiveLang);
   }
 
   changeLang() {
-    const oldLang = localStorage.getItem('lang');
-    const currentLang = (oldLang === this.defActiveLang) ? 'en' : this.defActiveLang;
-    localStorage.setItem('lang', currentLang);
-
-    return {
-      oldLang,
-      currentLang,
-    };
+    return changDataInStorage.call(this, 'lang', this.defActiveLang, 'en');
   }
 
   changeKeyboardLang() {
-    const { oldLang, currentLang } = this.changeLang();
-    const currentLangClass = `${this.className}--${currentLang}`;
-    const oldLangClass = `${this.className}--${oldLang}`;
-
-    for (let i = 0; i < this.keyboardRows.length; i += 1) {
-      const element = this.keyboardRows[i];
-      element.classList.remove(oldLangClass);
-      element.classList.add(currentLangClass);
-    }
+    stateChanger.call(this, this.changeLang, this.className, this.keyboardRows);
   }
 
   getCase() {
-    if (localStorage.getItem('case')) {
-      return localStorage.getItem('case');
-    }
-
-    localStorage.setItem('case', this.defActiveCase);
-    return this.defActiveCase;
+    return getDataFromStorage('case', this.defActiveCase);
   }
 
   changeCase() {
-    const oldCase = localStorage.getItem('case');
-    const currentCase = (oldCase === this.defActiveCase) ? 'uppercase' : this.defActiveCase;
-    localStorage.setItem('case', currentCase);
-
-    return {
-      oldCase,
-      currentCase,
-    };
+    return changDataInStorage('case', this.defActiveCase, 'uppercase');
   }
 
   changeKeyboardCase() {
-    const { oldCase, currentCase } = this.changeCase();
-    // debugger;
-    const currentCaseClass = `${this.className}--${currentCase}`;
-    const oldCaseClass = `${this.className}--${oldCase}`;
-
-    for (let i = 0; i < this.keyboardRows.length; i += 1) {
-      const element = this.keyboardRows[i];
-      element.classList.remove(oldCaseClass);
-      element.classList.add(currentCaseClass);
-    }
+    stateChanger.call(this, this.changeCase, this.className, this.keyboardRows);
   }
 
   createRows(lang, keyCase) {
@@ -336,23 +331,18 @@ class Keyboard {
     evt.preventDefault();
 
     if (evt.ctrlKey && evt.altKey) {
-      this.changeKeyboardLang()
+      this.changeKeyboardLang();
     }
 
     if (code === 'ShiftLeft' || code === 'ShiftRight') {
       this.changeKeyboardCase();
       this.debounce = true;
     }
-
-
   }
 
   init() {
     this.createKeyboard();
     document.body.prepend(this.keyboard);
-
-
-
     this.preventInput();
     document.body.addEventListener('keydown', this.onKeyDown.bind(this));
     document.body.addEventListener('keyup', this.onKeyUp.bind(this));
