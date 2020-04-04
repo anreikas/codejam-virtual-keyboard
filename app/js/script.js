@@ -93,6 +93,11 @@ function createKey(symbols, cls) {
   return createElement('DIV', fragment, mainClass, cls);
 }
 
+function getCurrentKey(keyCode) {
+  var code = '' + keyCode[0].toLowerCase() + keyCode.slice(1);
+  return document.body.querySelector('.' + code);
+}
+
 var Keyboard = function () {
   function Keyboard(data) {
     _classCallCheck(this, Keyboard);
@@ -103,51 +108,156 @@ var Keyboard = function () {
     this.keyboard = null;
     this.textArea = null;
     this.keyboardRows = null;
+    this.defActiveCase = 'lowercase';
+    this.defActiveLang = 'ru';
 
     this.keyboardSurfaceClass = this.className + '__surface';
     this.textAreaClass = this.className + '__input';
     this.wrapperClass = this.className + '__wrapper';
+    this.metaKeyClass = 'meta-key';
+    this.keyClass = 'key';
+    this.debounce = true;
   }
 
   _createClass(Keyboard, [{
+    key: 'preventInput',
+    value: function preventInput(e) {
+      this.textArea.addEventListener('input', function (e) {
+        if (e.inputType !== 'deleteContentBackward') {
+          this.value = this.value.slice(0, this.value.length - 1);
+        }
+        e.preventDefault();
+      });
+    }
+  }, {
+    key: 'getLang',
+    value: function getLang() {
+      if (localStorage.getItem('lang')) {
+        return localStorage.getItem('lang');
+      }
+
+      localStorage.setItem('lang', this.defActiveLang);
+      return this.defActiveLang;
+    }
+  }, {
+    key: 'changeLang',
+    value: function changeLang() {
+      var oldLang = localStorage.getItem('lang');
+      var currentLang = oldLang === this.defActiveLang ? 'en' : this.defActiveLang;
+      localStorage.setItem('lang', currentLang);
+
+      return {
+        oldLang: oldLang,
+        currentLang: currentLang
+      };
+    }
+  }, {
+    key: 'changeKeyboardLang',
+    value: function changeKeyboardLang() {
+      var _changeLang = this.changeLang(),
+          oldLang = _changeLang.oldLang,
+          currentLang = _changeLang.currentLang;
+
+      var currentLangClass = this.className + '--' + currentLang;
+      var oldLangClass = this.className + '--' + oldLang;
+
+      for (var i = 0; i < this.keyboardRows.length; i += 1) {
+        var element = this.keyboardRows[i];
+        element.classList.remove(oldLangClass);
+        element.classList.add(currentLangClass);
+      }
+    }
+  }, {
+    key: 'getCase',
+    value: function getCase() {
+      if (localStorage.getItem('case')) {
+        return localStorage.getItem('case');
+      }
+
+      localStorage.setItem('case', this.defActiveCase);
+      return this.defActiveCase;
+    }
+  }, {
+    key: 'changeCase',
+    value: function changeCase() {
+      var oldCase = localStorage.getItem('case');
+      var currentCase = oldCase === this.defActiveCase ? 'uppercase' : this.defActiveCase;
+      localStorage.setItem('case', currentCase);
+
+      return {
+        oldCase: oldCase,
+        currentCase: currentCase
+      };
+    }
+  }, {
+    key: 'changeKeyboardCase',
+    value: function changeKeyboardCase() {
+      var _changeCase = this.changeCase(),
+          oldCase = _changeCase.oldCase,
+          currentCase = _changeCase.currentCase;
+      // debugger;
+
+
+      var currentCaseClass = this.className + '--' + currentCase;
+      var oldCaseClass = this.className + '--' + oldCase;
+
+      for (var i = 0; i < this.keyboardRows.length; i += 1) {
+        var element = this.keyboardRows[i];
+        element.classList.remove(oldCaseClass);
+        element.classList.add(currentCaseClass);
+      }
+    }
+  }, {
     key: 'createRows',
-    value: function createRows() {
+    value: function createRows(lang, keyCase) {
       this.keyboardRows = document.createDocumentFragment();
       var rowsModificators = ['--first', '--second', '--third', '--fourth', '--fifth'];
       var rowClass = this.className + '-row';
+      var activeLang = this.className + '--' + lang;
+      var activeCase = this.className + '--' + keyCase;
 
       for (var i = 0; i < rowsModificators.length; i += 1) {
         var rowClassWithMod = '' + rowClass + rowsModificators[i];
-        this.keyboardRows.append(createElement('DIV', '', rowClass, rowClassWithMod));
+        this.keyboardRows.append(createElement('DIV', '', rowClass, rowClassWithMod, activeLang, activeCase));
       }
     }
   }, {
     key: 'getModificator',
     value: function getModificator(arrOfSymbols, arr, pos) {
-      var _arrOfSymbols = _slicedToArray(arrOfSymbols, 4),
-          firstSymbol = _arrOfSymbols[0],
-          lastSymbol = _arrOfSymbols[3];
-
+      var firstSymbol = arrOfSymbols[0].toLowerCase();
+      var lastSymbol = arrOfSymbols[arrOfSymbols.length - 1];
       var specialModificator = specialCase[firstSymbol];
 
       if (specialModificator) {
-        return this.btnClass + '--' + specialModificator;
+        return '' + specialModificator.toLowerCase();
       }
 
       if (arrOfSymbols.length === 1) {
-        if (firstSymbol === 'Shift' || firstSymbol === 'Alt' || firstSymbol === 'Alt') {
+        if (firstSymbol === 'shift' || firstSymbol === 'alt' || firstSymbol === 'alt' || firstSymbol === 'ctrl' || firstSymbol === 'win') {
           var mid = Math.floor(arr.length / 2);
           var prefix = pos < mid ? 'Left' : 'Right';
-          return this.btnClass + '--' + prefix + firstSymbol;
+          if (firstSymbol === 'ctrl') {
+            firstSymbol = 'control';
+          }
+          if (firstSymbol === 'win') {
+            firstSymbol = 'meta';
+          }
+          return '' + firstSymbol + prefix;
         }
-        return this.btnClass + '--' + firstSymbol;
+        if (firstSymbol === 'capslock') {
+          firstSymbol = 'capsLock';
+        }
+
+        return '' + firstSymbol;
       }
-      return this.btnClass + '--' + lastSymbol;
+      return '' + this.btnClass + lastSymbol;
     }
   }, {
-    key: 'createAndfillRows',
-    value: function createAndfillRows() {
-      this.createRows();
+    key: 'createAndFillRows',
+    value: function createAndFillRows() {
+      var lang = this.getLang();
+      var keyCase = this.getCase();
+      this.createRows(lang, keyCase);
 
       for (var i = 0; i < this.data.length; i += 1) {
         var rowData = this.data[i];
@@ -166,20 +276,98 @@ var Keyboard = function () {
   }, {
     key: 'createKeyboard',
     value: function createKeyboard() {
-      this.createAndfillRows();
+      this.createAndFillRows();
       var keyboardSurface = createElement('DIV', this.keyboardRows, this.keyboardSurfaceClass);
-      var textArea = createElement('TEXTAREA', '', this.textAreaClass);
-      var wrapper = createElement('DIV', '', this.wrapperClass);
       keyboardSurface.append(this.keyboardRows);
-      wrapper.append(textArea, keyboardSurface);
+      this.textArea = createElement('TEXTAREA', '', this.textAreaClass);
+      var wrapper = createElement('DIV', '', this.wrapperClass);
+      wrapper.append(this.textArea, keyboardSurface);
+      this.keyboard = createElement('DIV', wrapper, this.className);
 
-      return createElement('DIV', wrapper, this.className);
+      // refresh link to rows
+      this.keyboardRows = wrapper.querySelector('.' + this.keyboardSurfaceClass).children;
+    }
+  }, {
+    key: 'changeKeyState',
+    value: function changeKeyState(currentKey, flag) {
+      var isMetaKey = currentKey.classList.contains(this.metaKeyClass);
+      var isKey = currentKey.classList.contains(this.keyClass);
+      var metaKeyActiveClass = this.metaKeyClass + '--active';
+      var keyActiveClass = this.keyClass + '--active';
+
+      if (isMetaKey && flag) {
+        currentKey.classList.remove(metaKeyActiveClass);
+      } else if (isKey && flag) {
+        currentKey.classList.remove(keyActiveClass);
+      } else if (isMetaKey) {
+        currentKey.classList.add(metaKeyActiveClass);
+      } else if (isKey) {
+        currentKey.classList.add(keyActiveClass);
+      }
+    }
+  }, {
+    key: 'processInput',
+    value: function processInput(current, evt) {
+      var code = evt.code;
+
+      var text = current.querySelector('.' + this.keyClass + '__' + this.getLang() + '-' + this.getCase());
+
+      if (text) {
+        this.textArea.value += text.textContent;
+      } else if (code === 'Tab') {
+        evt.preventDefault();
+        this.textArea.value += '\t';
+      } else if (code === 'Del') {
+        //!
+      } else if (code === 'Backspace') {
+        //!
+      } else if (code === 'Space') {
+        this.textArea.value += ' ';
+      } else if (code === 'Enter') {
+        this.textArea.value += '\n';
+      } else if (code === 'ShiftLeft' && this.debounce || code === 'ShiftRight' && this.debounce) {
+        this.changeKeyboardCase();
+        this.debounce = false;
+      } else if (evt.ctrlKey && evt.altKey) {
+        this.changeKeyboardLang();
+      } else if (code === 'CapsLock') {
+        this.changeKeyboardCase();
+      }
+    }
+  }, {
+    key: 'onKeyDown',
+    value: function onKeyDown(evt) {
+      var currentKey = getCurrentKey(evt.code);
+      this.changeKeyState(currentKey);
+      this.processInput(currentKey, evt);
+    }
+  }, {
+    key: 'onKeyUp',
+    value: function onKeyUp(evt) {
+      var code = evt.code;
+
+      var currentKey = getCurrentKey(code);
+      this.changeKeyState(currentKey, true);
+      evt.preventDefault();
+
+      if (evt.ctrlKey && evt.altKey) {
+        this.changeKeyboardLang();
+      }
+
+      if (code === 'ShiftLeft' || code === 'ShiftRight') {
+        this.changeKeyboardCase();
+        this.debounce = true;
+      }
     }
   }, {
     key: 'init',
     value: function init() {
-      var keyboard = this.createKeyboard();
-      document.body.prepend(keyboard);
+      this.createKeyboard();
+      document.body.prepend(this.keyboard);
+
+      this.preventInput();
+      document.body.addEventListener('keydown', this.onKeyDown.bind(this));
+      document.body.addEventListener('keyup', this.onKeyUp.bind(this));
     }
   }]);
 

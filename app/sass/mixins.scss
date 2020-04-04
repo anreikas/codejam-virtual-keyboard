@@ -9,7 +9,7 @@
 @mixin key($bg, $fs, $bordersColor, $hoverColor){
   background-color: $bg;
   position: relative;
-  transition: all 0.3s;
+  transition: all 0.1s;
   font-size: $fs;
   border: 3px solid $bordersColor;
   border-radius: 3px;
@@ -22,7 +22,8 @@
 
   &--active{
     background-color: $hoverColor;
-    transform: translate(3px, 3px);
+    top: 3px;
+    left: 3px;
     box-shadow: none;
   }
 }
