@@ -72,12 +72,14 @@ function createElement(tagName, content, ...classes) {
   return element;
 }
 
-function createMetaKey(content, ...classes) {
+function createMetaKey(content, attr) {
   const mainClass = 'meta-key';
   const elemClass = `${mainClass}__label`;
   const childElem = createElement('DIV', content, elemClass);
+  const metaKey = createElement('DIV', childElem, mainClass);
+  metaKey.setAttribute('data-key', attr);
 
-  return createElement('DIV', childElem, mainClass, classes);
+  return metaKey;
 }
 
 function createKeyChild(mainClass, lowSymbol, upperSymbol) {
@@ -91,7 +93,7 @@ function createKeyChild(mainClass, lowSymbol, upperSymbol) {
   return createElement('DIV', fragment, mainClass);
 }
 
-function createKey(symbols, cls) {
+function createKey(symbols, attr) {
   const [rusLow, rusUpp, enLow, enUpp] = symbols;
   const mainClass = 'key';
   const ruLangClass = `${mainClass}__ru`;
@@ -100,13 +102,15 @@ function createKey(symbols, cls) {
   const enSymbols = createKeyChild(enLangClass, enLow, enUpp);
   const fragment = document.createDocumentFragment();
   fragment.append(ruSymbols, enSymbols);
+  const key = createElement('DIV', fragment, mainClass);
+  key.setAttribute('data-key', attr);
 
-  return createElement('DIV', fragment, mainClass, cls);
+  return key;
 }
 
 function getCurrentKey(keyCode) {
-  const code = `${keyCode[0].toLowerCase()}${keyCode.slice(1)}`;
-  return document.body.querySelector(`.${code}`);
+  // const code = `${keyCode[0].toLowerCase()}${keyCode.slice(1)}`;
+  return document.body.querySelector(`[data-key="${keyCode}"]`);
 }
 
 function getDataFromStorage(item, defValue) {
@@ -145,7 +149,7 @@ class Keyboard {
   constructor(data) {
     this.data = data;
     this.className = 'keyboard';
-    this.btnClass = 'key';
+    this.btnPrefix = 'Key';
     this.keyboard = null;
     this.textArea = null;
     this.keyboardRows = null;
@@ -160,12 +164,12 @@ class Keyboard {
     this.debounce = true;
   }
 
-  preventInput(e) {
+  preventInput() {
     this.textArea.addEventListener('input', function (e) {
       if (e.inputType !== 'deleteContentBackward') {
         this.value = this.value.slice(0, this.value.length - 1);
       }
-    })
+    });
 
     // this.textArea.addEventListener('keydown', function (e) {
     //   const { target } = e;
@@ -210,24 +214,25 @@ class Keyboard {
     }
   }
 
-  getModificator(arrOfSymbols, arr, pos) {
-    let firstSymbol = arrOfSymbols[0].toLowerCase();
+  getKeyAttr(arrOfSymbols, arr, pos) {
+    // debugger;
+    let firstSymbol = arrOfSymbols[0];
     const lastSymbol = arrOfSymbols[arrOfSymbols.length - 1];
-    const specialModificator = specialCase[firstSymbol];
+    const specialAttrValue = specialCase[firstSymbol];
 
-    if (specialModificator) {
-      return `${specialModificator.toLowerCase()}`;
+    if (specialAttrValue) {
+      return specialAttrValue;
     }
 
     if (arrOfSymbols.length === 1) {
-      if (firstSymbol === 'shift' || firstSymbol === 'alt' || firstSymbol === 'alt' || firstSymbol === 'ctrl' || firstSymbol === 'win') {
+      if (firstSymbol === 'Shift' || firstSymbol === 'Alt' || firstSymbol === 'Alt' || firstSymbol === 'Ctrl' || firstSymbol === 'Win') {
         const mid = Math.floor(arr.length / 2);
         const prefix = (pos < mid) ? 'Left' : 'Right';
-        if (firstSymbol === 'ctrl') {
-          firstSymbol = 'control';
+        if (firstSymbol === 'Ctrl') {
+          firstSymbol = 'Control';
         }
-        if (firstSymbol === 'win') {
-          firstSymbol = 'meta';
+        if (firstSymbol === 'Win') {
+          firstSymbol = 'Meta';
         }
         return `${firstSymbol}${prefix}`;
       }
@@ -237,7 +242,7 @@ class Keyboard {
 
       return `${firstSymbol}`;
     }
-    return `${this.btnClass}${lastSymbol}`;
+    return `${this.btnPrefix}${lastSymbol}`;
   }
 
   createAndFillRows() {
@@ -250,11 +255,11 @@ class Keyboard {
       const row = this.keyboardRows.children[i];
       for (let j = 0; j < rowData.length; j += 1) {
         const symbols = rowData[j];
-        const classWithMod = this.getModificator(symbols, rowData, j);
+        const attrVal = this.getKeyAttr(symbols, rowData, j);
         if (symbols.length === 1) {
-          row.append(createMetaKey(symbols[0], classWithMod));
+          row.append(createMetaKey(symbols[0], attrVal));
         } else {
-          row.append(createKey(symbols, classWithMod));
+          row.append(createKey(symbols, attrVal));
         }
       }
     }
@@ -312,6 +317,7 @@ class Keyboard {
       this.changeKeyboardCase();
       this.debounce = false;
     } else if (evt.ctrlKey && evt.altKey) {
+      // debugger;
       this.changeKeyboardLang();
     } else if (code === 'CapsLock') {
       this.changeKeyboardCase();
@@ -340,12 +346,21 @@ class Keyboard {
     }
   }
 
+  onMouseDown(e) {
+  }
+
+  onMouseUp(e) {
+  }
+
+
   init() {
     this.createKeyboard();
     document.body.prepend(this.keyboard);
     this.preventInput();
     document.body.addEventListener('keydown', this.onKeyDown.bind(this));
     document.body.addEventListener('keyup', this.onKeyUp.bind(this));
+    this.keyboard.addEventListener('mousedown', this.onMouseDown.bind(this));
+    this.keyboard.addEventListener('mouseup', this.onMouseUp.bind(this));
   }
 }
 

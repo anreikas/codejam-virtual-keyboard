@@ -52,16 +52,14 @@ function createElement(tagName, content) {
   return element;
 }
 
-function createMetaKey(content) {
+function createMetaKey(content, attr) {
   var mainClass = 'meta-key';
   var elemClass = mainClass + '__label';
   var childElem = createElement('DIV', content, elemClass);
+  var metaKey = createElement('DIV', childElem, mainClass);
+  metaKey.setAttribute('data-key', attr);
 
-  for (var _len2 = arguments.length, classes = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-    classes[_key2 - 1] = arguments[_key2];
-  }
-
-  return createElement('DIV', childElem, mainClass, classes);
+  return metaKey;
 }
 
 function createKeyChild(mainClass, lowSymbol, upperSymbol) {
@@ -75,7 +73,7 @@ function createKeyChild(mainClass, lowSymbol, upperSymbol) {
   return createElement('DIV', fragment, mainClass);
 }
 
-function createKey(symbols, cls) {
+function createKey(symbols, attr) {
   var _symbols = _slicedToArray(symbols, 4),
       rusLow = _symbols[0],
       rusUpp = _symbols[1],
@@ -89,13 +87,15 @@ function createKey(symbols, cls) {
   var enSymbols = createKeyChild(enLangClass, enLow, enUpp);
   var fragment = document.createDocumentFragment();
   fragment.append(ruSymbols, enSymbols);
+  var key = createElement('DIV', fragment, mainClass);
+  key.setAttribute('data-key', attr);
 
-  return createElement('DIV', fragment, mainClass, cls);
+  return key;
 }
 
 function getCurrentKey(keyCode) {
-  var code = '' + keyCode[0].toLowerCase() + keyCode.slice(1);
-  return document.body.querySelector('.' + code);
+  // const code = `${keyCode[0].toLowerCase()}${keyCode.slice(1)}`;
+  return document.body.querySelector('[data-key="' + keyCode + '"]');
 }
 
 function getDataFromStorage(item, defValue) {
@@ -139,7 +139,7 @@ var Keyboard = function () {
 
     this.data = data;
     this.className = 'keyboard';
-    this.btnClass = 'key';
+    this.btnPrefix = 'Key';
     this.keyboard = null;
     this.textArea = null;
     this.keyboardRows = null;
@@ -156,7 +156,7 @@ var Keyboard = function () {
 
   _createClass(Keyboard, [{
     key: 'preventInput',
-    value: function preventInput(e) {
+    value: function preventInput() {
       this.textArea.addEventListener('input', function (e) {
         if (e.inputType !== 'deleteContentBackward') {
           this.value = this.value.slice(0, this.value.length - 1);
@@ -213,25 +213,26 @@ var Keyboard = function () {
       }
     }
   }, {
-    key: 'getModificator',
-    value: function getModificator(arrOfSymbols, arr, pos) {
-      var firstSymbol = arrOfSymbols[0].toLowerCase();
+    key: 'getKeyAttr',
+    value: function getKeyAttr(arrOfSymbols, arr, pos) {
+      // debugger;
+      var firstSymbol = arrOfSymbols[0];
       var lastSymbol = arrOfSymbols[arrOfSymbols.length - 1];
-      var specialModificator = specialCase[firstSymbol];
+      var specialAttrValue = specialCase[firstSymbol];
 
-      if (specialModificator) {
-        return '' + specialModificator.toLowerCase();
+      if (specialAttrValue) {
+        return specialAttrValue;
       }
 
       if (arrOfSymbols.length === 1) {
-        if (firstSymbol === 'shift' || firstSymbol === 'alt' || firstSymbol === 'alt' || firstSymbol === 'ctrl' || firstSymbol === 'win') {
+        if (firstSymbol === 'Shift' || firstSymbol === 'Alt' || firstSymbol === 'Alt' || firstSymbol === 'Ctrl' || firstSymbol === 'Win') {
           var mid = Math.floor(arr.length / 2);
           var prefix = pos < mid ? 'Left' : 'Right';
-          if (firstSymbol === 'ctrl') {
-            firstSymbol = 'control';
+          if (firstSymbol === 'Ctrl') {
+            firstSymbol = 'Control';
           }
-          if (firstSymbol === 'win') {
-            firstSymbol = 'meta';
+          if (firstSymbol === 'Win') {
+            firstSymbol = 'Meta';
           }
           return '' + firstSymbol + prefix;
         }
@@ -241,7 +242,7 @@ var Keyboard = function () {
 
         return '' + firstSymbol;
       }
-      return '' + this.btnClass + lastSymbol;
+      return '' + this.btnPrefix + lastSymbol;
     }
   }, {
     key: 'createAndFillRows',
@@ -255,11 +256,11 @@ var Keyboard = function () {
         var row = this.keyboardRows.children[i];
         for (var j = 0; j < rowData.length; j += 1) {
           var symbols = rowData[j];
-          var classWithMod = this.getModificator(symbols, rowData, j);
+          var attrVal = this.getKeyAttr(symbols, rowData, j);
           if (symbols.length === 1) {
-            row.append(createMetaKey(symbols[0], classWithMod));
+            row.append(createMetaKey(symbols[0], attrVal));
           } else {
-            row.append(createKey(symbols, classWithMod));
+            row.append(createKey(symbols, attrVal));
           }
         }
       }
@@ -320,6 +321,7 @@ var Keyboard = function () {
         this.changeKeyboardCase();
         this.debounce = false;
       } else if (evt.ctrlKey && evt.altKey) {
+        // debugger;
         this.changeKeyboardLang();
       } else if (code === 'CapsLock') {
         this.changeKeyboardCase();
@@ -351,6 +353,12 @@ var Keyboard = function () {
       }
     }
   }, {
+    key: 'onMouseDown',
+    value: function onMouseDown(e) {}
+  }, {
+    key: 'onMouseUp',
+    value: function onMouseUp(e) {}
+  }, {
     key: 'init',
     value: function init() {
       this.createKeyboard();
@@ -358,6 +366,8 @@ var Keyboard = function () {
       this.preventInput();
       document.body.addEventListener('keydown', this.onKeyDown.bind(this));
       document.body.addEventListener('keyup', this.onKeyUp.bind(this));
+      this.keyboard.addEventListener('mousedown', this.onMouseDown.bind(this));
+      this.keyboard.addEventListener('mouseup', this.onMouseUp.bind(this));
     }
   }]);
 
