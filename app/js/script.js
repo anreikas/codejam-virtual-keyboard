@@ -157,16 +157,13 @@ var Keyboard = function () {
   _createClass(Keyboard, [{
     key: 'preventInput',
     value: function preventInput() {
-      this.textArea.addEventListener('input', function (e) {
+      function onTextAreaInput(e) {
         if (e.inputType !== 'deleteContentBackward') {
           this.value = this.value.slice(0, this.value.length - 1);
         }
-      });
+      }
 
-      // this.textArea.addEventListener('keydown', function (e) {
-      //   const { target } = e;
-      //   console.log(target.selectionStart)
-      // })
+      this.textArea.addEventListener('input', onTextAreaInput);
     }
   }, {
     key: 'getLang',
@@ -299,17 +296,14 @@ var Keyboard = function () {
     }
   }, {
     key: 'processInput',
-    value: function processInput(current, evt) {
-      var code = evt.code;
-
+    value: function processInput(current, code, evt) {
       var text = current.querySelector('.' + this.keyClass + '__' + this.getLang() + '-' + this.getCase());
 
       if (text) {
         this.textArea.value += text.textContent;
       } else if (code === 'Tab') {
-        evt.preventDefault();
         this.textArea.value += '\t';
-      } else if (code === 'Del') {
+      } else if (code === 'Delete') {
         //!
       } else if (code === 'Backspace') {
         //!
@@ -320,8 +314,7 @@ var Keyboard = function () {
       } else if (code === 'ShiftLeft' && this.debounce || code === 'ShiftRight' && this.debounce) {
         this.changeKeyboardCase();
         this.debounce = false;
-      } else if (evt.ctrlKey && evt.altKey) {
-        // debugger;
+      } else if (evt && evt.ctrlKey && evt && evt.altKey) {
         this.changeKeyboardLang();
       } else if (code === 'CapsLock') {
         this.changeKeyboardCase();
@@ -332,14 +325,12 @@ var Keyboard = function () {
     value: function onKeyDown(evt) {
       var currentKey = getCurrentKey(evt.code);
       this.changeKeyState(currentKey);
-      this.processInput(currentKey, evt);
+      this.processInput(currentKey, evt.code, evt);
     }
   }, {
     key: 'onKeyUp',
     value: function onKeyUp(evt) {
-      var code = evt.code;
-
-      var currentKey = getCurrentKey(code);
+      var currentKey = getCurrentKey(evt.code);
       this.changeKeyState(currentKey, true);
       evt.preventDefault();
 
@@ -347,17 +338,46 @@ var Keyboard = function () {
         this.changeKeyboardLang();
       }
 
-      if (code === 'ShiftLeft' || code === 'ShiftRight') {
+      if (evt.code === 'ShiftLeft' || evt.code === 'ShiftRight') {
         this.changeKeyboardCase();
         this.debounce = true;
       }
     }
   }, {
     key: 'onMouseDown',
-    value: function onMouseDown(e) {}
+    value: function onMouseDown(e) {
+      var target = e.target;
+
+      var key = target.closest('.meta-key') || target.closest('.key');
+
+      if (!key) {
+        return false;
+      }
+
+      var keyValAttr = key.getAttribute('data-key');
+
+      this.changeKeyState(key);
+      this.processInput(key, keyValAttr);
+      return true;
+    }
   }, {
     key: 'onMouseUp',
-    value: function onMouseUp(e) {}
+    value: function onMouseUp(e) {
+      var _this = this;
+
+      var target = e.target;
+
+      var key = target.closest('.meta-key') || target.closest('.key');
+
+      if (!key) {
+        return false;
+      }
+
+      setTimeout(function () {
+        _this.changeKeyState(key, true);
+      }, 100);
+      return true;
+    }
   }, {
     key: 'init',
     value: function init() {

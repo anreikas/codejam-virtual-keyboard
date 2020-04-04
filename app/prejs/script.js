@@ -165,16 +165,13 @@ class Keyboard {
   }
 
   preventInput() {
-    this.textArea.addEventListener('input', function (e) {
+    function onTextAreaInput(e) {
       if (e.inputType !== 'deleteContentBackward') {
         this.value = this.value.slice(0, this.value.length - 1);
       }
-    });
+    }
 
-    // this.textArea.addEventListener('keydown', function (e) {
-    //   const { target } = e;
-    //   console.log(target.selectionStart)
-    // })
+    this.textArea.addEventListener('input', onTextAreaInput);
   }
 
   getLang() {
@@ -278,7 +275,6 @@ class Keyboard {
     this.keyboardRows = wrapper.querySelector(`.${this.keyboardSurfaceClass}`).children;
   }
 
-
   changeKeyState(currentKey, flag) {
     const isMetaKey = currentKey.classList.contains(this.metaKeyClass);
     const isKey = currentKey.classList.contains(this.keyClass);
@@ -296,16 +292,14 @@ class Keyboard {
     }
   }
 
-  processInput(current, evt) {
-    const { code } = evt;
+  processInput(current, code, evt) {
     const text = current.querySelector(`.${this.keyClass}__${this.getLang()}-${this.getCase()}`);
 
     if (text) {
       this.textArea.value += text.textContent;
     } else if (code === 'Tab') {
-      evt.preventDefault();
       this.textArea.value += '\t';
-    } else if (code === 'Del') {
+    } else if (code === 'Delete') {
       //!
     } else if (code === 'Backspace') {
       //!
@@ -316,8 +310,7 @@ class Keyboard {
     } else if ((code === 'ShiftLeft' && this.debounce) || (code === 'ShiftRight' && this.debounce)) {
       this.changeKeyboardCase();
       this.debounce = false;
-    } else if (evt.ctrlKey && evt.altKey) {
-      // debugger;
+    } else if (evt && evt.ctrlKey && evt && evt.altKey) {
       this.changeKeyboardLang();
     } else if (code === 'CapsLock') {
       this.changeKeyboardCase();
@@ -327,12 +320,11 @@ class Keyboard {
   onKeyDown(evt) {
     const currentKey = getCurrentKey(evt.code);
     this.changeKeyState(currentKey);
-    this.processInput(currentKey, evt);
+    this.processInput(currentKey, evt.code, evt);
   }
 
   onKeyUp(evt) {
-    const { code } = evt;
-    const currentKey = getCurrentKey(code);
+    const currentKey = getCurrentKey(evt.code);
     this.changeKeyState(currentKey, true);
     evt.preventDefault();
 
@@ -340,16 +332,39 @@ class Keyboard {
       this.changeKeyboardLang();
     }
 
-    if (code === 'ShiftLeft' || code === 'ShiftRight') {
+    if (evt.code === 'ShiftLeft' || evt.code === 'ShiftRight') {
       this.changeKeyboardCase();
       this.debounce = true;
     }
   }
 
   onMouseDown(e) {
+    const { target } = e;
+    const key = target.closest('.meta-key') || target.closest('.key');
+
+    if (!key) {
+      return false;
+    }
+
+    const keyValAttr = key.getAttribute('data-key');
+
+    this.changeKeyState(key);
+    this.processInput(key, keyValAttr);
+    return true;
   }
 
   onMouseUp(e) {
+    const { target } = e;
+    const key = target.closest('.meta-key') || target.closest('.key');
+
+    if (!key) {
+      return false;
+    }
+
+    setTimeout(() => {
+      this.changeKeyState(key, true);
+    }, 100);
+    return true;
   }
 
 
