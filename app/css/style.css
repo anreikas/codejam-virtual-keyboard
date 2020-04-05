@@ -99,6 +99,16 @@ body {
   display: block;
 }
 
+.keyboard__info {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+
+  padding: 10px;
+
+  border: 3px solid #000;
+}
+
 .key {
   position: relative;
 

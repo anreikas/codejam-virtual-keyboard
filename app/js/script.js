@@ -132,6 +132,17 @@ function stateChanger(cb, className, where) {
   }
 }
 
+function createInfo() {
+  var firstRowText = 'This keyboard Was created on windows OC';
+  var secondRowHtml = 'Use <b>ctrl + alt</b> to switch language';
+  var firstRow = createElement('DIV', firstRowText, 'keyboard__info-row');
+  var secondRow = createElement('DIV', 'script.js', 'keyboard__info-row');
+  secondRow.innerHTML = secondRowHtml;
+  var fragment = document.createDocumentFragment();
+  fragment.append(firstRow, secondRow);
+  document.body.append(createElement('DIV', fragment, 'keyboard__info'));
+}
+
 var Keyboard = function () {
   function Keyboard(data) {
     _classCallCheck(this, Keyboard);
@@ -435,6 +446,7 @@ var Keyboard = function () {
     value: function init() {
       this.createKeyboard();
       document.body.prepend(this.keyboard);
+      createInfo();
       this.processTextArea();
       this.preventInput();
       document.body.addEventListener('keydown', this.onKeyDown.bind(this));
