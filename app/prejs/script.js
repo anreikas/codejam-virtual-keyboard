@@ -109,7 +109,6 @@ function createKey(symbols, attr) {
 }
 
 function getCurrentKey(keyCode) {
-  // const code = `${keyCode[0].toLowerCase()}${keyCode.slice(1)}`;
   return document.body.querySelector(`[data-key="${keyCode}"]`);
 }
 
@@ -362,6 +361,7 @@ class Keyboard {
     } else if (evt && evt.ctrlKey && evt && evt.altKey) {
       this.changeKeyboardLang();
     } else if (code === 'CapsLock') {
+      document.body.querySelector(`[data-key="${code}"]`).classList.toggle('meta-key--active-caps');
       this.changeKeyboardCase();
     }
   }
