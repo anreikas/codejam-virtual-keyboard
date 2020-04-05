@@ -162,16 +162,39 @@ class Keyboard {
     this.metaKeyClass = 'meta-key';
     this.keyClass = 'key';
     this.debounce = true;
+    this.startPosition = null;
   }
 
   preventInput() {
-    function onTextAreaInput(e) {
-      if (e.inputType !== 'deleteContentBackward') {
-        this.value = this.value.slice(0, this.value.length - 1);
-      }
+    function onTextAreaInput() {
+      this.textArea.value = this.textArea.value.slice(0, this.textArea.length - 1);
     }
 
-    this.textArea.addEventListener('input', onTextAreaInput);
+    function onKeyDown(e) {
+      if (e.code === 'Backspace') {
+        e.preventDefault();
+      }
+
+      this.textArea.selectionStart = 0;
+      this.textArea.selectionEnd = 0;
+    }
+
+
+    function onKeyUp(e) {
+      this.startPosition += 1;
+      e.preventDefault();
+    }
+
+    function onBlur(e) {
+      this.startPosition += 1;
+      e.preventDefault();
+    }
+
+
+    this.textArea.addEventListener('input', onTextAreaInput.bind(this));
+    this.textArea.addEventListener('keydown', onKeyDown.bind(this));
+    this.textArea.addEventListener('keyup', onKeyUp.bind(this));
+    this.textArea.addEventListener('blur', onBlur.bind(this));
   }
 
   getLang() {
@@ -300,9 +323,9 @@ class Keyboard {
     } else if (code === 'Tab') {
       this.textArea.value += '\t';
     } else if (code === 'Delete') {
-      //!
+
     } else if (code === 'Backspace') {
-      //!
+      this.textArea.value = this.textArea.value.slice(0, this.textArea.value.length - 1);
     } else if (code === 'Space') {
       this.textArea.value += ' ';
     } else if (code === 'Enter') {
@@ -347,7 +370,6 @@ class Keyboard {
     }
 
     const keyValAttr = key.getAttribute('data-key');
-
     this.changeKeyState(key);
     this.processInput(key, keyValAttr);
     return true;
@@ -364,6 +386,8 @@ class Keyboard {
     setTimeout(() => {
       this.changeKeyState(key, true);
     }, 100);
+
+
     return true;
   }
 

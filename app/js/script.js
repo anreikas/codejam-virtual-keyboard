@@ -152,18 +152,39 @@ var Keyboard = function () {
     this.metaKeyClass = 'meta-key';
     this.keyClass = 'key';
     this.debounce = true;
+    this.startPosition = null;
   }
 
   _createClass(Keyboard, [{
     key: 'preventInput',
     value: function preventInput() {
-      function onTextAreaInput(e) {
-        if (e.inputType !== 'deleteContentBackward') {
-          this.value = this.value.slice(0, this.value.length - 1);
-        }
+      function onTextAreaInput() {
+        this.textArea.value = this.textArea.value.slice(0, this.textArea.length - 1);
       }
 
-      this.textArea.addEventListener('input', onTextAreaInput);
+      function onKeyDown(e) {
+        if (e.code === 'Backspace') {
+          e.preventDefault();
+        }
+
+        this.textArea.selectionStart = 0;
+        this.textArea.selectionEnd = 0;
+      }
+
+      function onKeyUp(e) {
+        this.startPosition += 1;
+        e.preventDefault();
+      }
+
+      function onBlur(e) {
+        this.startPosition += 1;
+        e.preventDefault();
+      }
+
+      this.textArea.addEventListener('input', onTextAreaInput.bind(this));
+      this.textArea.addEventListener('keydown', onKeyDown.bind(this));
+      this.textArea.addEventListener('keyup', onKeyUp.bind(this));
+      this.textArea.addEventListener('blur', onBlur.bind(this));
     }
   }, {
     key: 'getLang',
@@ -303,10 +324,8 @@ var Keyboard = function () {
         this.textArea.value += text.textContent;
       } else if (code === 'Tab') {
         this.textArea.value += '\t';
-      } else if (code === 'Delete') {
-        //!
-      } else if (code === 'Backspace') {
-        //!
+      } else if (code === 'Delete') {} else if (code === 'Backspace') {
+        this.textArea.value = this.textArea.value.slice(0, this.textArea.value.length - 1);
       } else if (code === 'Space') {
         this.textArea.value += ' ';
       } else if (code === 'Enter') {
@@ -355,7 +374,6 @@ var Keyboard = function () {
       }
 
       var keyValAttr = key.getAttribute('data-key');
-
       this.changeKeyState(key);
       this.processInput(key, keyValAttr);
       return true;
@@ -376,6 +394,7 @@ var Keyboard = function () {
       setTimeout(function () {
         _this.changeKeyState(key, true);
       }, 100);
+
       return true;
     }
   }, {
