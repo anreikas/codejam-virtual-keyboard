@@ -152,39 +152,37 @@ var Keyboard = function () {
     this.metaKeyClass = 'meta-key';
     this.keyClass = 'key';
     this.debounce = true;
-    this.startPosition = null;
+    this.startPos = null;
+    this.focus = false;
   }
 
   _createClass(Keyboard, [{
     key: 'preventInput',
     value: function preventInput() {
-      function onTextAreaInput() {
-        this.textArea.value = this.textArea.value.slice(0, this.textArea.length - 1);
-      }
-
       function onKeyDown(e) {
-        if (e.code === 'Backspace') {
-          e.preventDefault();
-        }
-
-        this.textArea.selectionStart = 0;
-        this.textArea.selectionEnd = 0;
-      }
-
-      function onKeyUp(e) {
-        this.startPosition += 1;
         e.preventDefault();
       }
-
-      function onBlur(e) {
-        this.startPosition += 1;
-        e.preventDefault();
-      }
-
-      this.textArea.addEventListener('input', onTextAreaInput.bind(this));
       this.textArea.addEventListener('keydown', onKeyDown.bind(this));
-      this.textArea.addEventListener('keyup', onKeyUp.bind(this));
+    }
+  }, {
+    key: 'processTextArea',
+    value: function processTextArea() {
+      function onBlur() {
+        this.focus = false;
+      }
+
+      function onFocus() {
+        this.focus = true;
+      }
+
+      function mouseUp() {
+        this.startPos = this.textArea.selectionStart;
+        this.textArea.selectionEnd = this.startPos;
+      }
+
       this.textArea.addEventListener('blur', onBlur.bind(this));
+      this.textArea.addEventListener('focus', onFocus.bind(this));
+      this.textArea.addEventListener('mouseup', mouseUp.bind(this));
     }
   }, {
     key: 'getLang',
@@ -316,20 +314,56 @@ var Keyboard = function () {
       }
     }
   }, {
+    key: 'setCaretPosition',
+    value: function setCaretPosition() {
+      this.startPos = this.startPos <= 0 ? 0 : this.startPos - 1;
+      this.textArea.selectionEnd = this.startPos;
+      this.textArea.selectionStart = this.startPos;
+    }
+  }, {
+    key: 'removeSymbol',
+    value: function removeSymbol(code) {
+      var text = this.textArea.value;
+
+      if (code === 'Delete') {
+        this.textArea.value = '' + text.slice(0, this.startPos) + text.slice(this.startPos + 1);
+        this.textArea.selectionEnd = this.startPos;
+      } else if (this.startPos <= 0) {
+        return false;
+      } else if (code === 'Backspace' && text.length === this.startPos && this.focus) {
+        this.textArea.value = '' + text.slice(0, text.length - 1);
+        this.setCaretPosition();
+      } else if (code === 'Backspace') {
+        this.textArea.value = '' + text.slice(0, this.startPos - 1) + text.slice(this.startPos);
+        this.setCaretPosition();
+      }
+      return true;
+    }
+  }, {
+    key: 'insertSymbol',
+    value: function insertSymbol(sym) {
+      var text = this.textArea.value;
+      this.textArea.value = '' + text.slice(0, this.startPos) + sym + text.slice(this.startPos);
+      this.startPos += 1;
+      this.textArea.selectionEnd = this.startPos;
+      this.textArea.selectionStart = this.startPos;
+    }
+  }, {
     key: 'processInput',
     value: function processInput(current, code, evt) {
       var text = current.querySelector('.' + this.keyClass + '__' + this.getLang() + '-' + this.getCase());
-
       if (text) {
-        this.textArea.value += text.textContent;
+        this.insertSymbol(text.textContent);
       } else if (code === 'Tab') {
-        this.textArea.value += '\t';
-      } else if (code === 'Delete') {} else if (code === 'Backspace') {
-        this.textArea.value = this.textArea.value.slice(0, this.textArea.value.length - 1);
+        this.insertSymbol('\t');
+      } else if (code === 'Delete' && this.focus) {
+        this.removeSymbol(code);
+      } else if (code === 'Backspace') {
+        this.removeSymbol(code);
       } else if (code === 'Space') {
-        this.textArea.value += ' ';
+        this.insertSymbol(' ');
       } else if (code === 'Enter') {
-        this.textArea.value += '\n';
+        this.insertSymbol('\n');
       } else if (code === 'ShiftLeft' && this.debounce || code === 'ShiftRight' && this.debounce) {
         this.changeKeyboardCase();
         this.debounce = false;
@@ -365,9 +399,11 @@ var Keyboard = function () {
   }, {
     key: 'onMouseDown',
     value: function onMouseDown(e) {
+      var _this = this;
+
       var target = e.target;
 
-      var key = target.closest('.meta-key') || target.closest('.key');
+      var key = target.closest('.' + this.metaKeyClass) || target.closest('.' + this.keyClass);
 
       if (!key) {
         return false;
@@ -376,25 +412,22 @@ var Keyboard = function () {
       var keyValAttr = key.getAttribute('data-key');
       this.changeKeyState(key);
       this.processInput(key, keyValAttr);
+
+      setTimeout(function () {
+        _this.changeKeyState(key, true);
+      }, 100);
       return true;
     }
   }, {
     key: 'onMouseUp',
     value: function onMouseUp(e) {
-      var _this = this;
-
       var target = e.target;
 
-      var key = target.closest('.meta-key') || target.closest('.key');
+      var key = target.closest('.' + this.metaKeyClass) || target.closest('.' + this.keyClass);
 
       if (!key) {
         return false;
       }
-
-      setTimeout(function () {
-        _this.changeKeyState(key, true);
-      }, 100);
-
       return true;
     }
   }, {
@@ -402,6 +435,7 @@ var Keyboard = function () {
     value: function init() {
       this.createKeyboard();
       document.body.prepend(this.keyboard);
+      this.processTextArea();
       this.preventInput();
       document.body.addEventListener('keydown', this.onKeyDown.bind(this));
       document.body.addEventListener('keyup', this.onKeyUp.bind(this));
