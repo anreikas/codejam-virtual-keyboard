@@ -439,6 +439,20 @@ var Keyboard = function () {
       return true;
     }
   }, {
+    key: 'capsLockStateCheck',
+    value: function capsLockStateCheck() {
+      var capsLockBtn = document.querySelector('[data-key="CapsLock"]');
+      var caseState = this.getCase();
+
+      if (caseState === 'uppercase') {
+        capsLockBtn.classList.add('meta-key--active-caps');
+      }
+
+      if (caseState === 'lowercase') {
+        capsLockBtn.classList.remove('meta-key--active-caps');
+      }
+    }
+  }, {
     key: 'init',
     value: function init() {
       this.createKeyboard();
@@ -446,6 +460,7 @@ var Keyboard = function () {
       createInfo();
       this.processTextArea();
       this.preventInput();
+      this.capsLockStateCheck();
       document.body.addEventListener('keydown', this.onKeyDown.bind(this));
       document.body.addEventListener('keyup', this.onKeyUp.bind(this));
       this.keyboard.addEventListener('mousedown', this.onMouseDown.bind(this));
