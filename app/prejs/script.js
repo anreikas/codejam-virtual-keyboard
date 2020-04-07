@@ -156,8 +156,8 @@ function createInfo() {
 }
 
 class Keyboard {
-  constructor(data) {
-    this.data = data;
+  constructor(initialData) {
+    this.keyboardKeysData = initialData;
     this.className = 'keyboard';
     this.btnPrefix = 'Key';
     this.keyboard = null;
@@ -240,7 +240,6 @@ class Keyboard {
   }
 
   getKeyAttr(arrOfSymbols, arr, pos) {
-    // debugger;
     let firstSymbol = arrOfSymbols[0];
     const lastSymbol = arrOfSymbols[arrOfSymbols.length - 1];
     const specialAttrValue = specialCase[firstSymbol];
@@ -275,8 +274,8 @@ class Keyboard {
     const keyCase = this.getCase();
     this.createRows(lang, keyCase);
 
-    for (let i = 0; i < this.data.length; i += 1) {
-      const rowData = this.data[i];
+    for (let i = 0; i < this.keyboardKeysData.length; i += 1) {
+      const rowData = this.keyboardKeysData[i];
       const row = this.keyboardRows.children[i];
       for (let j = 0; j < rowData.length; j += 1) {
         const symbols = rowData[j];
@@ -298,8 +297,6 @@ class Keyboard {
     const wrapper = createElement('DIV', '', this.wrapperClass);
     wrapper.append(this.textArea, keyboardSurface);
     this.keyboard = createElement('DIV', wrapper, this.className);
-
-    // refresh link to rows
     this.keyboardRows = wrapper.querySelector(`.${this.keyboardSurfaceClass}`).children;
   }
 
