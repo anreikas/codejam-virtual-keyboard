@@ -64,17 +64,42 @@ const specialCase = {
   Del: 'Delete',
 };
 
+const transformKeyValue = {
+  Ctrl: 'Control',
+  Win: 'Meta',
+};
+
 const pairedKeys = {
-  Shift: 'Shift',
   Alt: 'Alt',
   Ctrl: 'Ctrl',
+  Shift: 'Shift',
+};
+
+const specialKeys = {
+  Tab: 'Tab',
+  Delete: 'Delete',
+  Backspace: 'Backspace',
+  Space: 'Space',
+  Enter: 'Enter',
+  CapsLock: 'CapsLock',
   Win: 'Win',
 };
 
-const singleKeys = {
-  capslock: 'capslock',
+const langs = {
+  en: 'en',
+  ru: 'ru',
+};
+
+const cases = {
+  lowercase: 'lowercase',
+  uppercase: 'uppercase',
+};
+
+const prefixes = {
+  left: 'Left',
+  right: 'Right',
 };
 
 export {
-  keyboardKeys, specialCase, pairedKeys, singleKeys,
+  keyboardKeys, specialCase, specialKeys, transformKeyValue, pairedKeys, langs, cases, prefixes,
 };

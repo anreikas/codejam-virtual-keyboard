@@ -1,4 +1,6 @@
-import { keyboardKeys, specialCase, pairedKeys, singleKeys } from './constants.js';
+import {
+  keyboardKeys, specialCase, specialKeys, transformKeyValue, pairedKeys, langs, cases, prefixes,
+} from './constants.js';
 import {
   createElement, createMetaKey, createKey, getCurrentKey,
   changDataInStorage, getDataFromStorage, stateChanger, createInfo,
@@ -12,8 +14,10 @@ class Keyboard {
     this.keyboard = null;
     this.textArea = null;
     this.keyboardRows = null;
-    this.defActiveCase = 'lowercase';
-    this.defActiveLang = 'ru';
+    this.defActiveCase = cases.lowercase;
+    this.defActiveLang = langs.ru;
+    this.activeCapsClass = 'meta-key--active-caps';
+    this.mainDataAttr = 'data-key';
 
     this.keyboardSurfaceClass = `${this.className}__surface`;
     this.textAreaClass = `${this.className}__input`;
@@ -56,7 +60,7 @@ class Keyboard {
   }
 
   changeLang() {
-    return changDataInStorage.call(this, 'lang', this.defActiveLang, 'en');
+    return changDataInStorage.call(this, 'lang', this.defActiveLang, langs.en);
   }
 
   changeKeyboardLang() {
@@ -68,7 +72,7 @@ class Keyboard {
   }
 
   changeCase() {
-    return changDataInStorage('case', this.defActiveCase, 'uppercase');
+    return changDataInStorage('case', this.defActiveCase, cases.uppercase);
   }
 
   changeKeyboardCase() {
@@ -100,17 +104,14 @@ class Keyboard {
     if (arrOfSymbols.length === 1) {
       if (pairedKeys[firstSymbol]) {
         const mid = Math.floor(arr.length / 2);
-        const prefix = (pos < mid) ? 'Left' : 'Right';
-        if (pairedKeys[firstSymbol] === 'Ctrl') {
-          firstSymbol = 'Control';
+        const prefix = (pos < mid) ? prefixes.left : prefixes.right;
+        if (firstSymbol === pairedKeys.Ctrl) {
+          firstSymbol = transformKeyValue[firstSymbol];
         }
-        if (pairedKeys[firstSymbol] === 'Win') {
-          firstSymbol = 'Meta';
+        if (firstSymbol === specialKeys.Win) {
+          firstSymbol = transformKeyValue[firstSymbol];
         }
         return `${firstSymbol}${prefix}`;
-      }
-      if (singleKeys[firstSymbol] === 'capslock') {
-        firstSymbol = 'capsLock';
       }
 
       return `${firstSymbol}`;
@@ -176,20 +177,23 @@ class Keyboard {
   removeSymbol(code) {
     const text = this.textArea.value;
 
-    if (code === 'Delete') {
+    if (code === specialKeys.Delete) {
       this.textArea.value = `${text.slice(0, this.startPos)}${text.slice(this.startPos + 1)}`;
       this.textArea.selectionEnd = this.startPos;
+      return true;
     }
     if (this.startPos <= 0) {
       return false;
     }
-    if (code === 'Backspace' && text.length === this.startPos && this.focus) {
+    if (code === specialKeys.Backspace && text.length === this.startPos && this.focus) {
       this.textArea.value = `${text.slice(0, text.length - 1)}`;
       this.setCaretPosition();
+      return true;
     }
-    if (code === 'Backspace') {
+    if (code === specialKeys.Backspace) {
       this.textArea.value = `${text.slice(0, this.startPos - 1)}${text.slice(this.startPos)}`;
       this.setCaretPosition();
+      return true;
     }
     return true;
   }
@@ -206,23 +210,23 @@ class Keyboard {
     const text = current.querySelector(`.${this.keyClass}__${this.getLang()}-${this.getCase()}`);
     if (text) {
       this.insertSymbol(text.textContent);
-    } else if (code === 'Tab') {
+    } else if (code === specialKeys.Tab) {
       this.insertSymbol('\t');
-    } else if (code === 'Delete' && this.focus) {
+    } else if (code === specialKeys.Delete && this.focus) {
       this.removeSymbol(code);
-    } else if (code === 'Backspace') {
+    } else if (code === specialKeys.Backspace) {
       this.removeSymbol(code);
-    } else if (code === 'Space') {
+    } else if (code === specialKeys.Space) {
       this.insertSymbol(' ');
-    } else if (code === 'Enter') {
+    } else if (code === specialKeys.Enter) {
       this.insertSymbol('\n');
-    } else if ((code === 'ShiftLeft' && this.debounce) || (code === 'ShiftRight' && this.debounce)) {
+    } else if (code.includes(pairedKeys.Shift) && this.debounce) {
       this.changeKeyboardCase();
       this.debounce = false;
     } else if (evt && evt.ctrlKey && evt && evt.altKey) {
       this.changeKeyboardLang();
-    } else if (code === 'CapsLock') {
-      document.body.querySelector(`[data-key="${code}"]`).classList.toggle('meta-key--active-caps');
+    } else if (code === specialKeys.CapsLock) {
+      document.body.querySelector(`[${this.mainDataAttr}="${code}"]`).classList.toggle(this.activeCapsClass);
       this.changeKeyboardCase();
     }
   }
@@ -242,7 +246,7 @@ class Keyboard {
       this.changeKeyboardLang();
     }
 
-    if (evt.code.includes('Shift')) {
+    if (evt.code.includes(pairedKeys.Shift)) {
       this.changeKeyboardCase();
       this.debounce = true;
     }
@@ -256,7 +260,7 @@ class Keyboard {
       return false;
     }
 
-    const keyValAttr = key.getAttribute('data-key');
+    const keyValAttr = key.getAttribute(this.mainDataAttr);
     this.changeKeyState(key);
     this.processInput(key, keyValAttr);
 
@@ -277,15 +281,15 @@ class Keyboard {
   }
 
   capsLockStateCheck() {
-    const capsLockBtn = document.querySelector('[data-key="CapsLock"]');
+    const capsLockBtn = document.querySelector(`[${this.mainDataAttr}="${specialKeys.CapsLock}"]`);
     const caseState = this.getCase();
 
-    if (caseState === 'uppercase') {
-      capsLockBtn.classList.add('meta-key--active-caps');
+    if (caseState === cases.uppercase) {
+      capsLockBtn.classList.add(this.activeCapsClass);
     }
 
-    if (caseState === 'lowercase') {
-      capsLockBtn.classList.remove('meta-key--active-caps');
+    if (caseState === cases.lowercase) {
+      capsLockBtn.classList.remove(this.activeCapsClass);
     }
   }
 
