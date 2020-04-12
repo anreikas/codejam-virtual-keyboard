@@ -1,4 +1,4 @@
-import { keyboardKeys, specialCase } from './constants.js';
+import { keyboardKeys, specialCase, pairedKeys, singleKeys } from './constants.js';
 import {
   createElement, createMetaKey, createKey, getCurrentKey,
   changDataInStorage, getDataFromStorage, stateChanger, createInfo,
@@ -98,18 +98,18 @@ class Keyboard {
     }
 
     if (arrOfSymbols.length === 1) {
-      if (firstSymbol === 'Shift' || firstSymbol === 'Alt' || firstSymbol === 'Alt' || firstSymbol === 'Ctrl' || firstSymbol === 'Win') {
+      if (pairedKeys[firstSymbol]) {
         const mid = Math.floor(arr.length / 2);
         const prefix = (pos < mid) ? 'Left' : 'Right';
-        if (firstSymbol === 'Ctrl') {
+        if (pairedKeys[firstSymbol] === 'Ctrl') {
           firstSymbol = 'Control';
         }
-        if (firstSymbol === 'Win') {
+        if (pairedKeys[firstSymbol] === 'Win') {
           firstSymbol = 'Meta';
         }
         return `${firstSymbol}${prefix}`;
       }
-      if (firstSymbol === 'capslock') {
+      if (singleKeys[firstSymbol] === 'capslock') {
         firstSymbol = 'capsLock';
       }
 

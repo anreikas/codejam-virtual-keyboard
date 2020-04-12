@@ -64,4 +64,17 @@ const specialCase = {
   Del: 'Delete',
 };
 
-export { keyboardKeys, specialCase };
+const pairedKeys = {
+  Shift: 'Shift',
+  Alt: 'Alt',
+  Ctrl: 'Ctrl',
+  Win: 'Win',
+};
+
+const singleKeys = {
+  capslock: 'capslock',
+};
+
+export {
+  keyboardKeys, specialCase, pairedKeys, singleKeys,
+};
