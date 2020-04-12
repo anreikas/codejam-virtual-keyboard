@@ -71,11 +71,10 @@ function stateChanger(cb, className, where) {
   const currentLangClass = `${className}--${currentVal}`;
   const oldLangClass = `${className}--${oldVal}`;
 
-  for (let i = 0; i < where.length; i += 1) {
-    const element = where[i];
+  [...where].forEach((element) => {
     element.classList.remove(oldLangClass);
     element.classList.add(currentLangClass);
-  }
+  });
 }
 
 function createInfo() {

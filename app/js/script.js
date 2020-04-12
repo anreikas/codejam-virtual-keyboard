@@ -82,10 +82,10 @@ class Keyboard {
     const activeLang = `${this.className}--${lang}`;
     const activeCase = `${this.className}--${keyCase}`;
 
-    for (let i = 0; i < rowsModificators.length; i += 1) {
-      const rowClassWithMod = `${rowClass}${rowsModificators[i]}`;
+    rowsModificators.forEach((modificator) => {
+      const rowClassWithMod = `${rowClass}${modificator}`;
       this.keyboardRows.append(createElement('DIV', '', rowClass, rowClassWithMod, activeLang, activeCase));
-    }
+    });
   }
 
   getKeyAttr(arrOfSymbols, arr, pos) {
@@ -123,19 +123,17 @@ class Keyboard {
     const keyCase = this.getCase();
     this.createRows(lang, keyCase);
 
-    for (let i = 0; i < this.keyboardKeysData.length; i += 1) {
-      const rowData = this.keyboardKeysData[i];
-      const row = this.keyboardRows.children[i];
-      for (let j = 0; j < rowData.length; j += 1) {
-        const symbols = rowData[j];
-        const attrVal = this.getKeyAttr(symbols, rowData, j);
+    this.keyboardKeysData.forEach((rowData, index) => {
+      const row = this.keyboardRows.children[index];
+      rowData.forEach((symbols, pos) => {
+        const attrVal = this.getKeyAttr(symbols, rowData, pos);
         if (symbols.length === 1) {
           row.append(createMetaKey(symbols[0], attrVal));
         } else {
           row.append(createKey(symbols, attrVal));
         }
-      }
-    }
+      });
+    });
   }
 
   createKeyboard() {
@@ -157,11 +155,14 @@ class Keyboard {
 
     if (isMetaKey && flag) {
       currentKey.classList.remove(metaKeyActiveClass);
-    } else if (isKey && flag) {
+    }
+    if (isKey && flag) {
       currentKey.classList.remove(keyActiveClass);
-    } else if (isMetaKey) {
+    }
+    if (isMetaKey && !flag) {
       currentKey.classList.add(metaKeyActiveClass);
-    } else if (isKey) {
+    }
+    if (isKey && !flag) {
       currentKey.classList.add(keyActiveClass);
     }
   }
@@ -178,12 +179,15 @@ class Keyboard {
     if (code === 'Delete') {
       this.textArea.value = `${text.slice(0, this.startPos)}${text.slice(this.startPos + 1)}`;
       this.textArea.selectionEnd = this.startPos;
-    } else if (this.startPos <= 0) {
+    }
+    if (this.startPos <= 0) {
       return false;
-    } else if (code === 'Backspace' && text.length === this.startPos && this.focus) {
+    }
+    if (code === 'Backspace' && text.length === this.startPos && this.focus) {
       this.textArea.value = `${text.slice(0, text.length - 1)}`;
       this.setCaretPosition();
-    } else if (code === 'Backspace') {
+    }
+    if (code === 'Backspace') {
       this.textArea.value = `${text.slice(0, this.startPos - 1)}${text.slice(this.startPos)}`;
       this.setCaretPosition();
     }
@@ -238,7 +242,7 @@ class Keyboard {
       this.changeKeyboardLang();
     }
 
-    if (evt.code === 'ShiftLeft' || evt.code === 'ShiftRight') {
+    if (evt.code.includes('Shift')) {
       this.changeKeyboardCase();
       this.debounce = true;
     }

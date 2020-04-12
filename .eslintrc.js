@@ -16,7 +16,8 @@ module.exports = {
   "rules": {
     "linebreak-style": 0,
     "max-classes-per-file": ["error", 3],
-    'import/extensions': ['error', 'always', { 'ignorePackages': true }]
+    "import/extensions": ['error', 'always', { 'ignorePackages': true }],
+    "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }]
   },
 
 };
