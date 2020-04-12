@@ -14,9 +14,9 @@
 }
 
 .keyboard__input {
-  width: 100%;
+  width: $inputWidth;
   resize: none;
-  min-height: 30%;
+  min-height: $inputMinHeight;
   box-sizing: border-box;
   font-size: $keyboardInputFontSize;
   border: none;
